@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منشئ صفحات الهبوط</title>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --bg-dark: #020617;
+  --bg-panel: rgba(15, 23, 42, 0.8);
+  --bg-card: rgba(30, 41, 59, 0.6);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border: rgba(148, 163, 184, 0.2);
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --glass: rgba(255, 255, 255, 0.05);
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+.light-mode {
+  --bg-dark: #f1f5f9;
+  --bg-panel: rgba(255, 255, 255, 0.9);
+  --bg-card: rgba(241, 245, 249, 0.8);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border: rgba(51, 65, 85, 0.2);
+  --glass: rgba(0, 0, 0, 0.02);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+@font-face {
+  font-family: 'Cairo';
+  src: local('Cairo'), local('Arial');
+  font-weight: 400 700;
+}
+body {
+  font-family: 'Cairo', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+.app-container {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  min-height: 100vh;
+}
+@media (max-width: 1024px) {
+  .app-container { grid-template-columns: 1fr; }
+  .preview-panel { display: none; }
+  .control-panel { width: 100%; }
+}
+.control-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border);
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+.control-panel::-webkit-scrollbar { width: 6px; }
+.control-panel::-webkit-scrollbar-track { background: transparent; }
+.control-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--glass); padding: 4px; border-radius: 10px; }
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.tab.active { background: var(--primary); color: white; }
+.tab:hover:not(.active) { color: var(--text-primary); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.section-header:hover { background: var(--glass); }
+.section-toggle {
+  width: 40px;
+  height: 22px;
+  background: var(--border);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.section-toggle.active { background: var(--primary); }
+.section-toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  right: 2px;
+  transition: transform 0.2s;
+}
+.section-toggle.active::after { transform: translateX(-18px); }
+.section-title { flex: 1; font-weight: 600; font-size: 0.9rem; }
+.section-actions { display: flex; gap: 4px; }
+.section-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: var(--glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.section-btn:hover { background: var(--primary); color: white; }
+.section-content { padding: 16px; border-top: 1px solid var(--border); display: none; }
+.section-content.open { display: block; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-select { cursor: pointer; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.color-input-wrap { display: flex; gap: 8px; align-items: center; }
+.color-input {
+  width: 44px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+}
+.file-upload {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.file-upload:hover { border-color: var(--primary); background: var(--glass); }
+.file-upload input { display: none; }
+.file-upload-icon { font-size: 2rem; margin-bottom: 8px; }
+.file-upload-text { font-size: 0.85rem; color: var(--text-secondary); }
+.uploaded-preview { margin-top: 10px; }
+.uploaded-preview img, .uploaded-preview video { max-width: 100%; border-radius: 6px; }
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.btn-secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-block { width: 100%; }
+.btn-group { display: flex; gap: 8px; margin-top: 16px; }
+.slider-wrap { display: flex; align-items: center; gap: 12px; }
+.slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 3px;
+  outline: none;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-value { min-width: 40px; text-align: center; font-size: 0.85rem; color: var(--text-secondary); }
+.dynamic-list { margin-top: 12px; }
+.dynamic-item {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.dynamic-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.dynamic-item-title { font-weight: 600; font-size: 0.85rem; }
+.add-item-btn {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.add-item-btn:hover { border-color: var(--primary); color: var(--primary); }
+.template-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.template-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.template-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.template-card.selected { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+.template-name { font-weight: 600; margin-bottom: 4px; }
+.template-desc { font-size: 0.8rem; color: var(--text-secondary); }
+.preview-panel {
+  background: var(--bg-dark);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.preview-title { font-weight: 600; }
+.preview-actions { display: flex; gap: 8px; }
+.device-toggle { display: flex; gap: 4px; background: var(--glass); padding: 4px; border-radius: 8px; }
+.device-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.device-btn.active { background: var(--primary); color: white; }
+.preview-frame-wrap {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+}
+.preview-frame {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 100%;
+  height: fit-content;
+  min-height: 100%;
+  overflow: hidden;
+  transition: max-width 0.3s;
+}
+.preview-frame.tablet { max-width: 768px; }
+.preview-frame.mobile { max-width: 375px; }
+.preview-content { padding: 0; }
+.export-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.code-preview {
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 300px;
+  overflow: auto;
+  margin-top: 12px;
+}
+.code-preview pre {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 12px 20px;
+  background: var(--success);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.gallery-item { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-item-remove {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+}
+.undo-redo { display: flex; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <div class="control-panel">
+    <div class="panel-header">
+      <div class="logo">منشئ صفحات الهبوط</div>
+      <div class="header-actions">
+        <div class="undo-redo">
+          <button class="icon-btn" onclick="undo()" title="تراجع">↩</button>
+          <button class="icon-btn" onclick="redo()" title="إعادة">↪</button>
+        </div>
+        <button class="icon-btn" onclick="toggleTheme()" title="تبديل الوضع" id="themeToggle">🌙</button>
+        <button class="icon-btn" onclick="resetProject()" title="إعادة تعيين">🔄</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="sections">الأقسام</button>
+      <button class="tab" data-tab="design">التصميم</button>
+      <button class="tab" data-tab="templates">القوالب</button>
+      <button class="tab" data-tab="export">التصدير</button>
+    </div>
+    <div id="sectionsTab" class="tab-content active">
+      <div id="sectionsList"></div>
+    </div>
+    <div id="designTab" class="tab-content">
+      <div class="section-card">
+        <div class="section-content open">
+          <div class="form-group">
+            <label class="form-label">الخط</label>
+            <select class="form-select" id="fontFamily" onchange="updateDesign()">
+              <option value="'Cairo', 'Segoe UI', system-ui, sans-serif">Cairo</option>
+              <option value="'Segoe UI', system-ui, sans-serif">System UI</option>
+              <option value="'Inter', sans-serif">Inter</option>
+              <option value="'Tajawal', sans-serif">Tajawal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">اللون الأساسي</label>
+            <div class="color-input-wrap">
+              <input type="color" class="color-input" id="primaryColor" value="#6366f1" onchange="updateDesign()">
+              <input type="text" class="form-input" id="primaryColorText" value="#6366f1" onchange="syncColor('primary')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">لون الخلفية</label>
+            <div class="color-input-wrap">
+              <input type="color" class="color-input" id="bgColor" value="#020617" onchange="updateDesign()">
+              <input type="text" class="form-input" id="bgColorText" value="#020617" onchange="syncColor('bg')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">لون النص</label>
+            <div class="color-input-wrap">
+              <input type="color" class="color-input" id="textColor" value="#f8fafc" onchange="updateDesign()">
+              <input type="text" class="form-input" id="textColorText" value="#f8fafc" onchange="syncColor('text')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">الحشو الداخلي</label>
+            <div class="slider-wrap">
+              <input type="range" class="slider" id="paddingSlider" min="20" max="100" value="60" onchange="updateDesign()">
+              <span class="slider-value" id="paddingValue">60px</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">أقصى عرض</label>
+            <select class="form-select" id="maxWidth" onchange="updateDesign()">
+              <option value="1200px">1200px</option>
+              <option value="1400px">1400px</option>
+              <option value="100%">كامل العرض</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="templatesTab" class="tab-content">
+      <div class="template-grid">
+        <div class="template-card" onclick="loadTemplate('saas')">
+          <div class="template-name">🚀 قالب SaaS</div>
+          <div class="template-desc">مثالي لشركات البرمجيات والخدمات السحابية</div>
+        </div>
+        <div class="template-card" onclick="loadTemplate('app')">
+          <div class="template-name">📱 قالب تطبيق موبايل</div>
+          <div class="template-desc">لعرض تطبيقات الجوال والألعاب</div>
+        </div>
+        <div class="template-card" onclick="loadTemplate('personal')">
+          <div class="template-name">👤 قالب شخصي</div>
+          <div class="template-desc">للعلامة التجارية الشخصية والمحترفين</div>
+        </div>
+      </div>
+    </div>
+    <div id="exportTab" class="tab-content">
+      <div class="btn-group" style="flex-direction: column;">
+        <button class="btn btn-primary btn-block" onclick="downloadHTML()">⬇️ تحميل الصفحة كـ HTML</button>
+        <button class="btn btn-secondary btn-block" onclick="copyCode()">📋 نسخ الكود</button>
+        <button class="btn btn-secondary btn-block" onclick="exportJSON()">💾 تصدير المشروع (JSON)</button>
+        <button class="btn btn-secondary btn-block" onclick="document.getElementById('importJSON').click()">📂 استيراد مشروع</button>
+        <input type="file" id="importJSON" accept=".json" style="display:none" onchange="importJSON(event)">
+      </div>
+      <div class="code-preview">
+        <pre id="codeOutput"></pre>
+      </div>
+    </div>
+    <div class="export-section">
+      <button class="btn btn-primary btn-block" onclick="applyChanges()">✨ تطبيق التغييرات</button>
+    </div>
+  </div>
+  <div class="preview-panel">
+    <div class="preview-header">
+      <div class="preview-title">المعاينة المباشرة</div>
+      <div class="preview-actions">
+        <div class="device-toggle">
+          <button class="device-btn active" onclick="setDevice('desktop')">🖥️</button>
+          <button class="device-btn" onclick="setDevice('tablet')">📱</button>
+          <button class="device-btn" onclick="setDevice('mobile')">📲</button>
+        </div>
+      </div>
+    </div>
+    <div class="preview-frame-wrap">
+      <div class="preview-frame" id="previewFrame">
+        <div class="preview-content" id="previewContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const sectionsConfig = [
+  { id: 'hero', name: 'القسم الرئيسي (Hero)', enabled: true, order: 0 },
+  { id: 'features', name: 'المميزات', enabled: true, order: 1 },
+  { id: 'video', name: 'عرض الفيديو', enabled: false, order: 2 },
+  { id: 'gallery', name: 'معرض الصور', enabled: false, order: 3 },
+  { id: 'testimonials', name: 'آراء العملاء', enabled: true, order: 4 },
+  { id: 'pricing', name: 'الأسعار', enabled: true, order: 5 },
+  { id: 'faq', name: 'الأسئلة الشائعة', enabled: true, order: 6 },
+  { id: 'about', name: 'من نحن', enabled: false, order: 7 },
+  { id: 'contact', name: 'تواصل معنا', enabled: true, order: 8 },
+  { id: 'footer', name: 'التذييل', enabled: true, order: 9 }
+];
+
+let projectData = {
+  sections: JSON.parse(JSON.stringify(sectionsConfig)),
+  design: {
+    font: "'Cairo', 'Segoe UI', system-ui, sans-serif",
+    primaryColor: '#6366f1',
+    bgColor: '#020617',
+    textColor: '#f8fafc',
+    padding: 60,
+    maxWidth: '1200px'
+  },
+  hero: {
+    bgType: 'gradient',
+    bgImage: '',
+    bgVideo: '',
+    overlayColor: '#000000',
+    overlayOpacity: 0.5,
+    brandName: 'اسم المنتج',
+    headline: 'عنوان رئيسي جذاب لصفحة الهبوط',
+    subtitle: 'وصف مختصر يوضح قيمة المنتج أو الخدمة التي تقدمها للعملاء',
+    ctaText: 'ابدأ الآن',
+    ctaLink: '#',
+    ctaSecondary: 'اعرف المزيد',
+    ctaSecondaryLink: '#',
+    showBadges: true,
+    showShapes: true
+  },
+  features: {
+    title: 'مميزاتنا الرائعة',
+    description: 'اكتشف ما يميزنا عن الآخرين',
+    columns: 3,
+    style: 'card',
+    items: [
+      { icon: '🚀', title: 'سريع جداً', description: 'أداء عالي وسرعة فائقة في التحميل' },
+      { icon: '🔒', title: 'آمن تماماً', description: 'حماية متقدمة لبياناتك ومعلوماتك' },
+      { icon: '💡', title: 'سهل الاستخدام', description: 'واجهة بسيطة وسهلة للجميع' },
+      { icon: '🎨', title: 'تصميم عصري', description: 'تصميم حديث وأنيق يناسب جميع الأجهزة' },
+      { icon: '📱', title: 'متجاوب', description: 'يعمل بسلاسة على جميع الأجهزة' },
+      { icon: '🌍', title: 'دعم عالمي', description: 'دعم فني على مدار الساعة' }
+    ]
+  },
+  video: {
+    title: 'شاهد كيف يعمل',
+    description: 'فيديو توضيحي قصير',
+    videoUrl: '',
+    videoBase64: '',
+    posterImage: ''
+  },
+  gallery: {
+    title: 'معرض الصور',
+    images: []
+  },
+  testimonials: {
+    title: 'ماذا يقول عملاؤنا',
+    layout: 'grid',
+    items: [
+      { name: 'أحمد محمد', role: 'مدير تسويق', quote: 'خدمة ممتازة وفريق محترف. أنصح الجميع بالتعامل معهم.', avatar: '' },
+      { name: 'سارة علي', role: 'مصممة', quote: 'تجربة رائعة من البداية للنهاية. شكراً لكم!', avatar: '' },
+      { name: 'خالد أحمد', role: 'مطور برمجيات', quote: 'أفضل استثمار قمت به لعملي. النتائج مذهلة!', avatar: '' }
+    ]
+  },
+  pricing: {
+    title: 'اختر الخطة المناسبة',
+    subtitle: 'أسعار تنافسية تناسب الجميع',
+    plans: [
+      { name: 'أساسي', price: '99', description: 'للأفراد', features: ['5 مشاريع', 'دعم بالبريد', '1GB تخزين'], cta: 'ابدأ مجاناً', ctaLink: '#', popular: false },
+      { name: 'احترافي', price: '199', description: 'للفرق الصغيرة', features: ['20 مشروع', 'دعم أولوية', '10GB تخزين', 'تحليلات متقدمة'], cta: 'اشترك الآن', ctaLink: '#', popular: true },
+      { name: 'مؤسسي', price: '499', description: 'للشركات الكبيرة', features: ['مشاريع غير محدودة', 'دعم 24/7', 'تخزين غير محدود', 'API كامل'], cta: 'تواصل معنا', ctaLink: '#', popular: false }
+    ]
+  },
+  faq: {
+    title: 'الأسئلة الشائعة',
+    items: [
+      { question: 'كيف يمكنني البدء؟', answer: 'يمكنك التسجيل مجاناً والبدء فوراً في استخدام المنصة بكل سهولة.' },
+      { question: 'هل هناك فترة تجريبية؟', answer: 'نعم، نقدم فترة تجريبية مجانية لمدة 14 يوماً بجميع المميزات.' },
+      { question: 'ما هي طرق الدفع المتاحة؟', answer: 'نقبل بطاقات الائتمان، PayPal، والتحويل البنكي.' }
+    ]
+  },
+  about: {
+    title: 'من نحن',
+    description: 'نحن فريق شغوف بالتقنية نسعى لتقديم أفضل الحلول الرقمية لعملائنا حول العالم.',
+    image: '',
+    stats: [
+      { number: '10K+', label: 'عميل سعيد' },
+      { number: '50+', label: 'دولة' },
+      { number: '99%', label: 'رضا العملاء' }
+    ]
+  },
+  contact: {
+    email: 'info@example.com',
+    whatsapp: '+966500000000',
+    twitter: '',
+    instagram: '',
+    youtube: '',
+    tiktok: '',
+    showForm: true,
+    mapUrl: ''
+  },
+  footer: {
+    logo: '',
+    description: 'نبني المستقبل الرقمي معاً',
+    copyright: '© 2024 جميع الحقوق محفوظة',
+    links: []
+  }
+};
+
+let history = [];
+let historyIndex = -1;
+let isDarkMode = true;
+
+function saveState() {
+  const state = JSON.stringify(projectData);
+  if (history[historyIndex] !== state) {
+    history = history.slice(0, historyIndex + 1);
+    history.push(state);
+    historyIndex++;
+    if (history.length > 50) {
+      history.shift();
+      historyIndex--;
+    }
+  }
+  localStorage.setItem('landingPageBuilder', state);
+}
+
+function undo() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    projectData = JSON.parse(history[historyIndex]);
+    renderSections();
+    updatePreview();
+    showNotification('تم التراجع');
+  }
+}
+
+function redo() {
+  if (historyIndex < history.length - 1) {
+    historyIndex++;
+    projectData = JSON.parse(history[historyIndex]);
+    renderSections();
+    updatePreview();
+    showNotification('تم الإعادة');
+  }
+}
+
+function init() {
+  const saved = localStorage.getItem('landingPageBuilder');
+  if (saved) {
+    try {
+      projectData = JSON.parse(saved);
+    } catch(e) {}
+  }
+  history.push(JSON.stringify(projectData));
+  historyIndex = 0;
+  setupTabs();
+  renderSections();
+  updateDesignInputs();
+  updatePreview();
+}
+
+function setupTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+    });
+  });
+}
+
+function renderSections() {
+  const container = document.getElementById('sectionsList');
+  const sorted = [...projectData.sections].sort((a, b) => a.order - b.order);
+  container.innerHTML = sorted.map((section, idx) => `
+    <div class="section-card" data-id="${section.id}">
+      <div class="section-header" onclick="toggleSectionContent('${section.id}')">
+        <div class="section-toggle ${section.enabled ? 'active' : ''}" onclick="event.stopPropagation(); toggleSection('${section.id}')"></div>
+        <div class="section-title">${section.name}</div>
+        <div class="section-actions">
+          <button class="section-btn" onclick="event.stopPropagation(); moveSection('${section.id}', -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+          <button class="section-btn" onclick="event.stopPropagation(); moveSection('${section.id}', 1)" ${idx === sorted.length - 1 ? 'disabled' : ''}>▼</button>
+          <button class="section-btn" onclick="event.stopPropagation(); duplicateSection('${section.id}')">📋</button>
+        </div>
+      </div>
+      <div class="section-content ${section.id === 'hero' ? 'open' : ''}" id="content-${section.id}">
+        ${getSectionForm(section.id)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function getSectionForm(sectionId) {
+  const data = projectData[sectionId];
+  if (!data) return '';
+
+  switch(sectionId) {
+    case 'hero':
+      return `
+        <div class="form-group">
+          <label class="form-label">نوع الخلفية</label>
+          <select class="form-select" onchange="projectData.hero.bgType=this.value">
+            <option value="gradient" ${data.bgType==='gradient'?'selected':''}>تدرج لوني</option>
+            <option value="image" ${data.bgType==='image'?'selected':''}>صورة</option>
+            <option value="video" ${data.bgType==='video'?'selected':''}>فيديو</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">صورة الخلفية</label>
+          <div class="file-upload" onclick="document.getElementById('heroBgImage').click()">
+            <div class="file-upload-icon">🖼️</div>
+            <div class="file-upload-text">اسحب الصورة أو انقر للرفع</div>
+            <input type="file" id="heroBgImage" accept="image/*" onchange="handleImageUpload(event, 'hero', 'bgImage')">
+          </div>
+          ${data.bgImage ? `<div class="uploaded-preview"><img src="${data.bgImage}" alt=""></div>` : ''}
+        </div>
+        <div class="form-group">
+          <label class="form-label">فيديو الخلفية</label>
+          <div class="file-upload" onclick="document.getElementById('heroBgVideo').click()">
+            <div class="file-upload-icon">🎬</div>
+            <div class="file-upload-text">رفع فيديو للخلفية (MP4, WebM)</div>
+            <input type="file" id="heroBgVideo" accept="video/*" onchange="handleVideoUpload(event, 'hero', 'bgVideo')">
+          </div>
+          ${data.bgVideo ? `<div class="uploaded-preview"><video src="${data.bgVideo}" controls style="max-width:100%"></video></div>` : ''}
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">لون التراكب</label>
+            <input type="color" class="color-input" value="${data.overlayColor}" onchange="projectData.hero.overlayColor=this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">شفافية التراكب</label>
+            <input type="range" class="slider" min="0" max="100" value="${data.overlayOpacity*100}" onchange="projectData.hero.overlayOpacity=this.value/100">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">اسم العلامة التجارية</label>
+          <input type="text" class="form-input" value="${data.brandName}" onchange="projectData.hero.brandName=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">العنوان الرئيسي</label>
+          <input type="text" class="form-input" value="${data.headline}" onchange="projectData.hero.headline=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">العنوان الفرعي</label>
+          <textarea class="form-textarea" onchange="projectData.hero.subtitle=this.value">${data.subtitle}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">نص الزر الرئيسي</label>
+            <input type="text" class="form-input" value="${data.ctaText}" onchange="projectData.hero.ctaText=this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">رابط الزر</label>
+            <input type="text" class="form-input" value="${data.ctaLink}" onchange="projectData.hero.ctaLink=this.value">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">الزر الثانوي</label>
+            <input type="text" class="form-input" value="${data.ctaSecondary}" onchange="projectData.hero.ctaSecondary=this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">رابطه</label>
+            <input type="text" class="form-input" value="${data.ctaSecondaryLink}" onchange="projectData.hero.ctaSecondaryLink=this.value">
+          </div>
+        </div>
+      `;
+    case 'features':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان القسم</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.features.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف</label>
+          <textarea class="form-textarea" onchange="projectData.features.description=this.value">${data.description}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">عدد الأعمدة</label>
+            <select class="form-select" onchange="projectData.features.columns=parseInt(this.value)">
+              <option value="2" ${data.columns===2?'selected':''}>2 أعمدة</option>
+              <option value="3" ${data.columns===3?'selected':''}>3 أعمدة</option>
+              <option value="4" ${data.columns===4?'selected':''}>4 أعمدة</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">النمط</label>
+            <select class="form-select" onchange="projectData.features.style=this.value">
+              <option value="card" ${data.style==='card'?'selected':''}>بطاقات</option>
+              <option value="minimal" ${data.style==='minimal'?'selected':''}>بسيط</option>
+            </select>
+          </div>
+        </div>
+        <div class="dynamic-list">
+          ${data.items.map((item, i) => `
+            <div class="dynamic-item">
+              <div class="dynamic-item-header">
+                <span class="dynamic-item-title">ميزة ${i+1}</span>
+                <button class="section-btn" onclick="removeFeatureItem(${i})">✕</button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input" placeholder="الأيقونة (إيموجي)" value="${item.icon}" onchange="projectData.features.items[${i}].icon=this.value">
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input" placeholder="العنوان" value="${item.title}" onchange="projectData.features.items[${i}].title=this.value">
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea" placeholder="الوصف" onchange="projectData.features.items[${i}].description=this.value">${item.description}</textarea>
+              </div>
+            </div>
+          `).join('')}
+          <button class="add-item-btn" onclick="addFeatureItem()">+ إضافة ميزة</button>
+        </div>
+      `;
+    case 'video':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان القسم</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.video.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف</label>
+          <textarea class="form-textarea" onchange="projectData.video.description=this.value">${data.description}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">رفع فيديو</label>
+          <div class="file-upload" onclick="document.getElementById('videoUpload').click()">
+            <div class="file-upload-icon">🎬</div>
+            <div class="file-upload-text">انقر لرفع فيديو (MP4, WebM)</div>
+            <input type="file" id="videoUpload" accept="video/*" onchange="handleVideoUpload(event)">
+          </div>
+          ${data.videoBase64 ? `<div class="uploaded-preview"><video src="${data.videoBase64}" controls style="max-width:100%"></video></div>` : ''}
+        </div>
+        <div class="form-group">
+          <label class="form-label">أو رابط الفيديو</label>
+          <input type="text" class="form-input" placeholder="https://..." value="${data.videoUrl}" onchange="projectData.video.videoUrl=this.value">
+        </div>
+      `;
+    case 'gallery':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان المعرض</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.gallery.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رفع صور</label>
+          <div class="file-upload" onclick="document.getElementById('galleryUpload').click()">
+            <div class="file-upload-icon">🖼️</div>
+            <div class="file-upload-text">انقر لرفع صور متعددة</div>
+            <input type="file" id="galleryUpload" accept="image/*" multiple onchange="handleGalleryUpload(event)">
+          </div>
+        </div>
+        <div class="gallery-grid">
+          ${data.images.map((img, i) => `
+            <div class="gallery-item">
+              <img src="${img}" alt="">
+              <button class="gallery-item-remove" onclick="removeGalleryImage(${i})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    case 'testimonials':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان القسم</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.testimonials.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">التخطيط</label>
+          <select class="form-select" onchange="projectData.testimonials.layout=this.value">
+            <option value="grid" ${data.layout==='grid'?'selected':''}>شبكة</option>
+            <option value="slider" ${data.layout==='slider'?'selected':''}>منزلق</option>
+          </select>
+        </div>
+        <div class="dynamic-list">
+          ${data.items.map((item, i) => `
+            <div class="dynamic-item">
+              <div class="dynamic-item-header">
+                <span class="dynamic-item-title">رأي ${i+1}</span>
+                <button class="section-btn" onclick="removeTestimonialItem(${i})">✕</button>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="الاسم" value="${item.name}" onchange="projectData.testimonials.items[${i}].name=this.value">
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="المنصب" value="${item.role}" onchange="projectData.testimonials.items[${i}].role=this.value">
+                </div>
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea" placeholder="الاقتباس" onchange="projectData.testimonials.items[${i}].quote=this.value">${item.quote}</textarea>
+              </div>
+            </div>
+          `).join('')}
+          <button class="add-item-btn" onclick="addTestimonialItem()">+ إضافة رأي</button>
+        </div>
+      `;
+    case 'pricing':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان القسم</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.pricing.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">العنوان الفرعي</label>
+          <input type="text" class="form-input" value="${data.subtitle}" onchange="projectData.pricing.subtitle=this.value">
+        </div>
+        <div class="dynamic-list">
+          ${data.plans.map((plan, i) => `
+            <div class="dynamic-item">
+              <div class="dynamic-item-header">
+                <span class="dynamic-item-title">${plan.name}</span>
+                <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;">
+                  <input type="checkbox" ${plan.popular?'checked':''} onchange="projectData.pricing.plans[${i}].popular=this.checked"> الأكثر شعبية
+                </label>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="اسم الخطة" value="${plan.name}" onchange="projectData.pricing.plans[${i}].name=this.value">
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="السعر" value="${plan.price}" onchange="projectData.pricing.plans[${i}].price=this.value">
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input" placeholder="الوصف" value="${plan.description}" onchange="projectData.pricing.plans[${i}].description=this.value">
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea" placeholder="المميزات (سطر لكل ميزة)" onchange="projectData.pricing.plans[${i}].features=this.value.split('\\n').filter(f=>f.trim())">${plan.features.join('\n')}</textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="نص الزر" value="${plan.cta}" onchange="projectData.pricing.plans[${i}].cta=this.value">
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="رابط الزر" value="${plan.ctaLink}" onchange="projectData.pricing.plans[${i}].ctaLink=this.value">
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    case 'faq':
+      return `
+        <div class="form-group">
+          <label class="form-label">عنوان القسم</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.faq.title=this.value">
+        </div>
+        <div class="dynamic-list">
+          ${data.items.map((item, i) => `
+            <div class="dynamic-item">
+              <div class="dynamic-item-header">
+                <span class="dynamic-item-title">سؤال ${i+1}</span>
+                <button class="section-btn" onclick="removeFaqItem(${i})">✕</button>
+              </div>
+              <div class="form-group">
+                <input type="text" class="form-input" placeholder="السؤال" value="${item.question}" onchange="projectData.faq.items[${i}].question=this.value">
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea" placeholder="الإجابة" onchange="projectData.faq.items[${i}].answer=this.value">${item.answer}</textarea>
+              </div>
+            </div>
+          `).join('')}
+          <button class="add-item-btn" onclick="addFaqItem()">+ إضافة سؤال</button>
+        </div>
+      `;
+    case 'about':
+      return `
+        <div class="form-group">
+          <label class="form-label">العنوان</label>
+          <input type="text" class="form-input" value="${data.title}" onchange="projectData.about.title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف</label>
+          <textarea class="form-textarea" onchange="projectData.about.description=this.value">${data.description}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الصورة</label>
+          <div class="file-upload" onclick="document.getElementById('aboutImage').click()">
+            <div class="file-upload-icon">🖼️</div>
+            <div class="file-upload-text">رفع صورة</div>
+            <input type="file" id="aboutImage" accept="image/*" onchange="handleImageUpload(event, 'about', 'image')">
+          </div>
+          ${data.image ? `<div class="uploaded-preview"><img src="${data.image}" alt=""></div>` : ''}
+        </div>
+        <div class="dynamic-list">
+          ${data.stats.map((stat, i) => `
+            <div class="dynamic-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="الرقم" value="${stat.number}" onchange="projectData.about.stats[${i}].number=this.value">
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-input" placeholder="التسمية" value="${stat.label}" onchange="projectData.about.stats[${i}].label=this.value">
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    case 'contact':
+      return `
+        <div class="form-group">
+          <label class="form-label">البريد الإلكتروني</label>
+          <input type="email" class="form-input" value="${data.email}" onchange="projectData.contact.email=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">واتساب</label>
+          <input type="text" class="form-input" placeholder="+966..." value="${data.whatsapp}" onchange="projectData.contact.whatsapp=this.value">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">تويتر</label>
+            <input type="text" class="form-input" value="${data.twitter}" onchange="projectData.contact.twitter=this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">انستغرام</label>
+            <input type="text" class="form-input" value="${data.instagram}" onchange="projectData.contact.instagram=this.value">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">يوتيوب</label>
+            <input type="text" class="form-input" value="${data.youtube}" onchange="projectData.contact.youtube=this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">تيك توك</label>
+            <input type="text" class="form-input" value="${data.tiktok}" onchange="projectData.contact.tiktok=this.value">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">رابط خريطة جوجل (iframe)</label>
+          <input type="text" class="form-input" placeholder="https://www.google.com/maps/embed?..." value="${data.mapUrl}" onchange="projectData.contact.mapUrl=this.value">
+        </div>
+      `;
+    case 'footer':
+      return `
+        <div class="form-group">
+          <label class="form-label">الشعار</label>
+          <div class="file-upload" onclick="document.getElementById('footerLogo').click()">
+            <div class="file-upload-icon">🖼️</div>
+            <div class="file-upload-text">رفع الشعار</div>
+            <input type="file" id="footerLogo" accept="image/*" onchange="handleImageUpload(event, 'footer', 'logo')">
+          </div>
+          ${data.logo ? `<div class="uploaded-preview"><img src="${data.logo}" alt="" style="max-height:60px"></div>` : ''}
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوصف</label>
+          <textarea class="form-textarea" onchange="projectData.footer.description=this.value">${data.description}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">حقوق النشر</label>
+          <input type="text" class="form-input" value="${data.copyright}" onchange="projectData.footer.copyright=this.value">
+        </div>
+      `;
+    default:
+      return '';
+  }
+}
+
+function toggleSection(id) {
+  const section = projectData.sections.find(s => s.id === id);
+  if (section) {
+    section.enabled = !section.enabled;
+    renderSections();
+    saveState();
+  }
+}
+
+function toggleSectionContent(id) {
+  const content = document.getElementById('content-' + id);
+  if (content) {
+    content.classList.toggle('open');
+  }
+}
+
+function moveSection(id, direction) {
+  const sorted = [...projectData.sections].sort((a, b) => a.order - b.order);
+  const idx = sorted.findIndex(s => s.id === id);
+  if ((direction === -1 && idx > 0) || (direction === 1 && idx < sorted.length - 1)) {
+    const swapIdx = idx + direction;
+    const temp = sorted[idx].order;
+    sorted[idx].order = sorted[swapIdx].order;
+    sorted[swapIdx].order = temp;
+    renderSections();
+    saveState();
+  }
+}
+
+function duplicateSection(id) {
+  showNotification('تم نسخ إعدادات القسم');
+}
+
+function addFeatureItem() {
+  projectData.features.items.push({ icon: '⭐', title: 'ميزة جديدة', description: 'وصف الميزة' });
+  renderSections();
+  document.getElementById('content-features').classList.add('open');
+}
+
+function removeFeatureItem(idx) {
+  projectData.features.items.splice(idx, 1);
+  renderSections();
+  document.getElementById('content-features').classList.add('open');
+}
+
+function addTestimonialItem() {
+  projectData.testimonials.items.push({ name: 'اسم العميل', role: 'المنصب', quote: 'رأي العميل هنا', avatar: '' });
+  renderSections();
+  document.getElementById('content-testimonials').classList.add('open');
+}
+
+function removeTestimonialItem(idx) {
+  projectData.testimonials.items.splice(idx, 1);
+  renderSections();
+  document.getElementById('content-testimonials').classList.add('open');
+}
+
+function addFaqItem() {
+  projectData.faq.items.push({ question: 'سؤال جديد؟', answer: 'الإجابة هنا' });
+  renderSections();
+  document.getElementById('content-faq').classList.add('open');
+}
+
+function removeFaqItem(idx) {
+  projectData.faq.items.splice(idx, 1);
+  renderSections();
+  document.getElementById('content-faq').classList.add('open');
+}
+
+function handleImageUpload(event, section, field) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const reader = new FileReader();
+    reader.onerror = () => showNotification('خطأ: فشل رفع الصورة');
+    reader.onload = function(e) {
+      projectData[section][field] = e.target.result;
+      saveState();
+      renderSections();
+      updatePreview();
+      setTimeout(() => document.getElementById('content-' + section)?.classList.add('open'), 50);
+      showNotification('تم رفع الصورة بنجاح ✓');
+      event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Upload error:', err);
+    showNotification('خطأ: فشل قراءة الملف');
+  }
+}
+
+function handleVideoUpload(event, section, field) {
+  const file = event.target.files[0];
+  if (!file) return;
+  showNotification('جاري رفع الفيديو...');
+  try {
+    const reader = new FileReader();
+    reader.onerror = () => showNotification('خطأ: فشل رفع الفيديو');
+    reader.onload = function(e) {
+      if (section && field) {
+        projectData[section][field] = e.target.result;
+      } else {
+        projectData.video.videoBase64 = e.target.result;
+      }
+      saveState();
+      renderSections();
+      updatePreview();
+      if (section) setTimeout(() => document.getElementById('content-' + section)?.classList.add('open'), 50);
+      showNotification('تم رفع الفيديو بنجاح ✓');
+      event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Video error:', err);
+    showNotification('خطأ: فشل قراءة الملف');
+  }
+}
+
+function handleGalleryUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  let loaded = 0;
+  const errors = [];
+  for (let file of files) {
+    try {
+      const reader = new FileReader();
+      reader.onerror = () => errors.push(file.name);
+      reader.onload = function(e) {
+        projectData.gallery.images.push(e.target.result);
+        loaded++;
+        if (loaded === files.length) {
+          saveState();
+          renderSections();
+          updatePreview();
+          setTimeout(() => document.getElementById('content-gallery')?.classList.add('open'), 50);
+          const msg = errors.length > 0 ? `تم رفع ${loaded} صورة (${errors.length} فشلت)` : `تم رفع ${files.length} صورة ✓`;
+          showNotification(msg);
+          event.target.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) { loaded++; errors.push(file.name); }
+  }
+}
+
+function removeGalleryImage(idx) {
+  projectData.gallery.images.splice(idx, 1);
+  renderSections();
+  document.getElementById('content-gallery').classList.add('open');
+}
+
+function updateDesign() {
+  projectData.design.font = document.getElementById('fontFamily').value;
+  projectData.design.primaryColor = document.getElementById('primaryColor').value;
+  projectData.design.bgColor = document.getElementById('bgColor').value;
+  projectData.design.textColor = document.getElementById('textColor').value;
+  projectData.design.padding = parseInt(document.getElementById('paddingSlider').value);
+  projectData.design.maxWidth = document.getElementById('maxWidth').value;
+  document.getElementById('paddingValue').textContent = projectData.design.padding + 'px';
+  document.getElementById('primaryColorText').value = projectData.design.primaryColor;
+  document.getElementById('bgColorText').value = projectData.design.bgColor;
+  document.getElementById('textColorText').value = projectData.design.textColor;
+}
+
+function syncColor(type) {
+  if (type === 'primary') {
+    document.getElementById('primaryColor').value = document.getElementById('primaryColorText').value;
+  } else if (type === 'bg') {
+    document.getElementById('bgColor').value = document.getElementById('bgColorText').value;
+  } else if (type === 'text') {
+    document.getElementById('textColor').value = document.getElementById('textColorText').value;
+  }
+  updateDesign();
+}
+
+function updateDesignInputs() {
+  document.getElementById('fontFamily').value = projectData.design.font;
+  document.getElementById('primaryColor').value = projectData.design.primaryColor;
+  document.getElementById('primaryColorText').value = projectData.design.primaryColor;
+  document.getElementById('bgColor').value = projectData.design.bgColor;
+  document.getElementById('bgColorText').value = projectData.design.bgColor;
+  document.getElementById('textColor').value = projectData.design.textColor;
+  document.getElementById('textColorText').value = projectData.design.textColor;
+  document.getElementById('paddingSlider').value = projectData.design.padding;
+  document.getElementById('paddingValue').textContent = projectData.design.padding + 'px';
+  document.getElementById('maxWidth').value = projectData.design.maxWidth;
+}
+
+function generateHTML() {
+  const d = projectData.design;
+  const sorted = [...projectData.sections].filter(s => s.enabled).sort((a, b) => a.order - b.order);
+
+  let sectionsHTML = '';
+  sorted.forEach(section => {
+    sectionsHTML += generateSectionHTML(section.id);
+  });
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${projectData.hero.brandName}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: ${d.font};
+  background: ${d.bgColor};
+  color: ${d.textColor};
+  line-height: 1.7;
+}
+.container { max-width: ${d.maxWidth}; margin: 0 auto; padding: 0 20px; }
+section { padding: ${d.padding}px 0; }
+.btn {
+  display: inline-block;
+  padding: 14px 32px;
+  background: ${d.primaryColor};
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.btn-secondary {
+  background: transparent;
+  border: 2px solid ${d.primaryColor};
+  color: ${d.primaryColor};
+}
+h1, h2, h3, h4 { line-height: 1.3; }
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  ${projectData.hero.bgType === 'image' && projectData.hero.bgImage ? `background-image: url('${projectData.hero.bgImage}'); background-size: cover; background-position: center;` : ''}
+  ${projectData.hero.bgType === 'gradient' ? `background: linear-gradient(135deg, ${d.primaryColor}22, ${d.bgColor});` : ''}
+}
+.hero video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: ${projectData.hero.overlayColor};
+  opacity: ${projectData.hero.overlayOpacity};
+  z-index: 1;
+}
+.hero-content { position: relative; z-index: 1; max-width: 800px; padding: 40px 20px; }
+.hero-brand { font-size: 1rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; opacity: 0.8; }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); margin-bottom: 20px; }
+.hero p { font-size: 1.25rem; opacity: 0.9; margin-bottom: 40px; }
+.hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.section-title { text-align: center; margin-bottom: 50px; }
+.section-title h2 { font-size: 2.5rem; margin-bottom: 16px; }
+.section-title p { opacity: 0.7; font-size: 1.1rem; }
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+.feature-card {
+  background: ${d.bgColor}cc;
+  border: 1px solid ${d.textColor}22;
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+.feature-card:hover { transform: translateY(-5px); }
+.feature-icon { font-size: 3rem; margin-bottom: 20px; }
+.feature-card h3 { margin-bottom: 12px; }
+.feature-card p { opacity: 0.7; }
+.video-section { text-align: center; }
+.video-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.video-wrapper video, .video-wrapper iframe { width: 100%; aspect-ratio: 16/9; border: none; }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+.gallery-item {
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  cursor: pointer;
+}
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.gallery-item:hover img { transform: scale(1.05); }
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+.testimonial-card {
+  background: ${d.textColor}11;
+  border-radius: 16px;
+  padding: 30px;
+}
+.testimonial-quote { font-size: 1.1rem; margin-bottom: 20px; font-style: italic; }
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.testimonial-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: ${d.primaryColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.testimonial-info h4 { margin-bottom: 4px; }
+.testimonial-info span { opacity: 0.6; font-size: 0.9rem; }
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.pricing-card {
+  background: ${d.textColor}11;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s;
+}
+.pricing-card:hover { transform: translateY(-5px); }
+.pricing-card.popular { border-color: ${d.primaryColor}; }
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: ${d.primaryColor};
+  color: white;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pricing-name { font-size: 1.5rem; margin-bottom: 8px; }
+.pricing-price { font-size: 3rem; font-weight: 700; margin-bottom: 8px; }
+.pricing-price span { font-size: 1rem; opacity: 0.6; }
+.pricing-desc { opacity: 0.6; margin-bottom: 30px; }
+.pricing-features { list-style: none; margin-bottom: 30px; text-align: right; }
+.pricing-features li { padding: 10px 0; border-bottom: 1px solid ${d.textColor}22; }
+.pricing-features li::before { content: '✓'; color: ${d.primaryColor}; margin-left: 10px; }
+.faq-list { max-width: 800px; margin: 0 auto; }
+.faq-item { border-bottom: 1px solid ${d.textColor}22; }
+.faq-question {
+  padding: 20px 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.faq-question::after { content: '+'; font-size: 1.5rem; transition: transform 0.3s; }
+.faq-item.open .faq-question::after { transform: rotate(45deg); }
+.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+.faq-item.open .faq-answer { max-height: 500px; }
+.faq-answer p { padding-bottom: 20px; opacity: 0.8; }
+.about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+@media (max-width: 768px) { .about-content { grid-template-columns: 1fr; } }
+.about-image { border-radius: 16px; overflow: hidden; }
+.about-image img { width: 100%; }
+.about-stats { display: flex; gap: 40px; margin-top: 30px; }
+.stat { text-align: center; }
+.stat-number { font-size: 2.5rem; font-weight: 700; color: ${d.primaryColor}; }
+.stat-label { opacity: 0.7; }
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
+@media (max-width: 768px) { .contact-grid { grid-template-columns: 1fr; } }
+.contact-info { display: flex; flex-direction: column; gap: 20px; }
+.contact-item { display: flex; align-items: center; gap: 12px; }
+.contact-icon { font-size: 1.5rem; }
+.social-links { display: flex; gap: 16px; margin-top: 20px; }
+.social-link {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: ${d.textColor}11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background 0.3s;
+}
+.social-link:hover { background: ${d.primaryColor}; }
+.contact-form { display: flex; flex-direction: column; gap: 16px; }
+.contact-form input, .contact-form textarea {
+  padding: 14px 18px;
+  border: 1px solid ${d.textColor}33;
+  border-radius: 8px;
+  background: transparent;
+  color: ${d.textColor};
+  font-family: inherit;
+  font-size: 1rem;
+}
+.contact-form textarea { min-height: 120px; resize: vertical; }
+.contact-form button {
+  padding: 14px 32px;
+  background: ${d.primaryColor};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.map-wrapper { margin-top: 30px; border-radius: 16px; overflow: hidden; }
+.map-wrapper iframe { width: 100%; height: 300px; border: none; }
+footer {
+  background: ${d.textColor}08;
+  padding: 60px 0 30px;
+  text-align: center;
+}
+.footer-logo { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; }
+.footer-logo img { max-height: 50px; }
+.footer-desc { opacity: 0.7; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; }
+.footer-copyright { opacity: 0.5; font-size: 0.9rem; margin-top: 30px; padding-top: 30px; border-top: 1px solid ${d.textColor}22; }
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+${sectionsHTML}
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open')">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+<script>
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.querySelector('.faq-question').addEventListener('click', () => {
+    item.classList.toggle('open');
+  });
+});
+document.querySelectorAll('.gallery-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.getElementById('lightbox-img').src = item.querySelector('img').src;
+    document.getElementById('lightbox').classList.add('open');
+  });
+});
+<\/script>
+</body>
+</html>`;
+}
+
+function generateSectionHTML(id) {
+  const d = projectData.design;
+  switch(id) {
+    case 'hero':
+      const h = projectData.hero;
+      return `
+<section class="hero">
+  ${h.bgType === 'video' && h.bgVideo ? `<video autoplay muted loop><source src="${h.bgVideo}"></video>` : ''}
+  <div class="hero-content">
+    <div class="hero-brand">${h.brandName}</div>
+    <h1>${h.headline}</h1>
+    <p>${h.subtitle}</p>
+    <div class="hero-buttons">
+      <a href="${h.ctaLink}" class="btn">${h.ctaText}</a>
+      ${h.ctaSecondary ? `<a href="${h.ctaSecondaryLink}" class="btn btn-secondary">${h.ctaSecondary}</a>` : ''}
+    </div>
+  </div>
+</section>`;
+    case 'features':
+      const f = projectData.features;
+      return `
+<section class="features">
+  <div class="container">
+    <div class="section-title">
+      <h2>${f.title}</h2>
+      <p>${f.description}</p>
+    </div>
+    <div class="features-grid" style="grid-template-columns: repeat(${f.columns}, 1fr);">
+      ${f.items.map(item => `
+      <div class="feature-card">
+        <div class="feature-icon">${item.icon}</div>
+        <h3>${item.title}</h3>
+        <p>${item.description}</p>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+    case 'video':
+      const v = projectData.video;
+      const videoSrc = v.videoBase64 || v.videoUrl;
+      if (!videoSrc) return '';
+      return `
+<section class="video-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>${v.title}</h2>
+      <p>${v.description}</p>
+    </div>
+    <div class="video-wrapper">
+      ${v.videoBase64 ? `<video controls><source src="${v.videoBase64}"></video>` : `<iframe src="${v.videoUrl}" allowfullscreen></iframe>`}
+    </div>
+  </div>
+</section>`;
+    case 'gallery':
+      const g = projectData.gallery;
+      if (!g.images.length) return '';
+      return `
+<section class="gallery">
+  <div class="container">
+    <div class="section-title">
+      <h2>${g.title}</h2>
+    </div>
+    <div class="gallery-grid">
+      ${g.images.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('')}
+    </div>
+  </div>
+</section>`;
+    case 'testimonials':
+      const t = projectData.testimonials;
+      return `
+<section class="testimonials">
+  <div class="container">
+    <div class="section-title">
+      <h2>${t.title}</h2>
+    </div>
+    <div class="testimonials-grid">
+      ${t.items.map(item => `
+      <div class="testimonial-card">
+        <p class="testimonial-quote">"${item.quote}"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">${item.avatar ? `<img src="${item.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : item.name.charAt(0)}</div>
+          <div class="testimonial-info">
+            <h4>${item.name}</h4>
+            <span>${item.role}</span>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+    case 'pricing':
+      const p = projectData.pricing;
+      return `
+<section class="pricing">
+  <div class="container">
+    <div class="section-title">
+      <h2>${p.title}</h2>
+      <p>${p.subtitle}</p>
+    </div>
+    <div class="pricing-grid">
+      ${p.plans.map(plan => `
+      <div class="pricing-card ${plan.popular ? 'popular' : ''}">
+        ${plan.popular ? '<div class="popular-badge">الأكثر شعبية</div>' : ''}
+        <h3 class="pricing-name">${plan.name}</h3>
+        <div class="pricing-price">${plan.price}<span> ر.س/شهر</span></div>
+        <p class="pricing-desc">${plan.description}</p>
+        <ul class="pricing-features">
+          ${plan.features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+        <a href="${plan.ctaLink}" class="btn" style="width:100%">${plan.cta}</a>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+    case 'faq':
+      const faq = projectData.faq;
+      return `
+<section class="faq">
+  <div class="container">
+    <div class="section-title">
+      <h2>${faq.title}</h2>
+    </div>
+    <div class="faq-list">
+      ${faq.items.map(item => `
+      <div class="faq-item">
+        <div class="faq-question">${item.question}</div>
+        <div class="faq-answer"><p>${item.answer}</p></div>
+      </div>`).join('')}
+    </div>
+  </div>
+</section>`;
+    case 'about':
+      const a = projectData.about;
+      return `
+<section class="about">
+  <div class="container">
+    <div class="about-content">
+      <div class="about-text">
+        <h2>${a.title}</h2>
+        <p style="margin:20px 0;opacity:0.8">${a.description}</p>
+        <div class="about-stats">
+          ${a.stats.map(s => `<div class="stat"><div class="stat-number">${s.number}</div><div class="stat-label">${s.label}</div></div>`).join('')}
+        </div>
+      </div>
+      ${a.image ? `<div class="about-image"><img src="${a.image}" alt=""></div>` : ''}
+    </div>
+  </div>
+</section>`;
+    case 'contact':
+      const c = projectData.contact;
+      return `
+<section class="contact">
+  <div class="container">
+    <div class="section-title">
+      <h2>تواصل معنا</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        ${c.email ? `<div class="contact-item"><span class="contact-icon">📧</span><span>${c.email}</span></div>` : ''}
+        ${c.whatsapp ? `<div class="contact-item"><span class="contact-icon">📱</span><a href="https://wa.me/${c.whatsapp.replace(/\D/g,'')}" style="color:inherit">${c.whatsapp}</a></div>` : ''}
+        <div class="social-links">
+          ${c.twitter ? `<a href="${c.twitter}" class="social-link">𝕏</a>` : ''}
+          ${c.instagram ? `<a href="${c.instagram}" class="social-link">📷</a>` : ''}
+          ${c.youtube ? `<a href="${c.youtube}" class="social-link">▶</a>` : ''}
+          ${c.tiktok ? `<a href="${c.tiktok}" class="social-link">♪</a>` : ''}
+        </div>
+        ${c.mapUrl ? `<div class="map-wrapper"><iframe src="${c.mapUrl}"></iframe></div>` : ''}
+      </div>
+      <div class="contact-form">
+        <input type="text" placeholder="الاسم">
+        <input type="email" placeholder="البريد الإلكتروني">
+        <textarea placeholder="رسالتك"></textarea>
+        <button type="button">إرسال</button>
+      </div>
+    </div>
+  </div>
+</section>`;
+    case 'footer':
+      const ft = projectData.footer;
+      return `
+<footer>
+  <div class="container">
+    <div class="footer-logo">${ft.logo ? `<img src="${ft.logo}" alt="">` : projectData.hero.brandName}</div>
+    <p class="footer-desc">${ft.description}</p>
+    <div class="social-links" style="justify-content:center">
+      ${projectData.contact.twitter ? `<a href="${projectData.contact.twitter}" class="social-link">𝕏</a>` : ''}
+      ${projectData.contact.instagram ? `<a href="${projectData.contact.instagram}" class="social-link">📷</a>` : ''}
+      ${projectData.contact.youtube ? `<a href="${projectData.contact.youtube}" class="social-link">▶</a>` : ''}
+    </div>
+    <p class="footer-copyright">${ft.copyright}</p>
+  </div>
+</footer>`;
+    default:
+      return '';
+  }
+}
+
+function updatePreview() {
+  const html = generateHTML();
+  document.getElementById('previewContent').innerHTML = `<iframe srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;height:100%;min-height:800px;border:none;"></iframe>`;
+  document.getElementById('codeOutput').textContent = html;
+}
+
+function applyChanges() {
+  saveState();
+  updatePreview();
+  showNotification('تم تطبيق التغييرات');
+}
+
+function downloadHTML() {
+  const html = generateHTML();
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'landing-page.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('تم تحميل الصفحة');
+}
+
+function copyCode() {
+  const html = generateHTML();
+  navigator.clipboard.writeText(html);
+  showNotification('تم نسخ الكود');
+}
+
+function exportJSON() {
+  const json = JSON.stringify(projectData, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'landing-page-project.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('تم تصدير المشروع');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        projectData = JSON.parse(e.target.result);
+        renderSections();
+        updateDesignInputs();
+        updatePreview();
+        saveState();
+        showNotification('تم استيراد المشروع');
+      } catch(err) {
+        showNotification('خطأ في الملف');
+      }
+    };
+    reader.readAsText(file);
+  }
+}
+
+function setDevice(device) {
+  document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const frame = document.getElementById('previewFrame');
+  frame.classList.remove('tablet', 'mobile');
+  if (device !== 'desktop') frame.classList.add(device);
+}
+
+function toggleTheme() {
+  isDarkMode = !isDarkMode;
+  document.body.classList.toggle('light-mode', !isDarkMode);
+  document.getElementById('themeToggle').textContent = isDarkMode ? '🌙' : '☀️';
+}
+
+function resetProject() {
+  if (confirm('هل أنت متأكد من إعادة تعيين المشروع؟')) {
+    localStorage.removeItem('landingPageBuilder');
+    location.reload();
+  }
+}
+
+function loadTemplate(template) {
+  const templates = {
+    saas: {
+      hero: {
+        bgType: 'gradient',
+        bgImage: '',
+        bgVideo: '',
+        overlayColor: '#000000',
+        overlayOpacity: 0.3,
+        brandName: 'CloudFlow',
+        headline: 'أتمتة أعمالك بذكاء اصطناعي متقدم',
+        subtitle: 'منصة سحابية متكاملة لإدارة المشاريع والفرق بكفاءة عالية وتكلفة منخفضة',
+        ctaText: 'ابدأ تجربتك المجانية',
+        ctaLink: '#',
+        ctaSecondary: 'شاهد العرض التوضيحي',
+        ctaSecondaryLink: '#',
+        showBadges: true,
+        showShapes: true
+      },
+      design: {
+        font: "'Cairo', 'Segoe UI', system-ui, sans-serif",
+        primaryColor: '#6366f1',
+        bgColor: '#0f0f23',
+        textColor: '#ffffff',
+        padding: 80,
+        maxWidth: '1200px'
+      }
+    },
+    app: {
+      hero: {
+        bgType: 'gradient',
+        bgImage: '',
+        bgVideo: '',
+        overlayColor: '#000000',
+        overlayOpacity: 0.2,
+        brandName: 'FitTrack',
+        headline: 'تطبيقك المثالي للياقة البدنية',
+        subtitle: 'تتبع تمارينك، راقب تقدمك، وحقق أهدافك الصحية مع مدرب ذكي في جيبك',
+        ctaText: 'حمّل التطبيق',
+        ctaLink: '#',
+        ctaSecondary: 'متوفر على iOS و Android',
+        ctaSecondaryLink: '#',
+        showBadges: true,
+        showShapes: true
+      },
+      design: {
+        font: "'Cairo', 'Segoe UI', system-ui, sans-serif",
+        primaryColor: '#22c55e',
+        bgColor: '#0a0a0a',
+        textColor: '#ffffff',
+        padding: 80,
+        maxWidth: '1200px'
+      }
+    },
+    personal: {
+      hero: {
+        bgType: 'gradient',
+        bgImage: '',
+        bgVideo: '',
+        overlayColor: '#000000',
+        overlayOpacity: 0.4,
+        brandName: 'أحمد المصمم',
+        headline: 'أصمم تجارب رقمية استثنائية',
+        subtitle: 'مصمم UI/UX متخصص في بناء منتجات رقمية جميلة وسهلة الاستخدام',
+        ctaText: 'تواصل معي',
+        ctaLink: '#contact',
+        ctaSecondary: 'شاهد أعمالي',
+        ctaSecondaryLink: '#gallery',
+        showBadges: true,
+        showShapes: true
+      },
+      design: {
+        font: "'Cairo', 'Segoe UI', system-ui, sans-serif",
+        primaryColor: '#f59e0b',
+        bgColor: '#1a1a2e',
+        textColor: '#ffffff',
+        padding: 80,
+        maxWidth: '1000px'
+      }
+    }
+  };
+
+  if (templates[template]) {
+    projectData.hero = { ...projectData.hero, ...templates[template].hero };
+    projectData.design = { ...projectData.design, ...templates[template].design };
+    renderSections();
+    updateDesignInputs();
+    updatePreview();
+    saveState();
+    showNotification('تم تحميل القالب');
+  }
+}
+
+function showNotification(message) {
+  const existing = document.querySelector('.notification');
+  if (existing) existing.remove();
+  const notif = document.createElement('div');
+  notif.className = 'notification';
+  notif.textContent = message;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
