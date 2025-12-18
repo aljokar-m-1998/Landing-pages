@@ -719,7 +719,7 @@ function renderSections() {
 function getSectionForm(sectionId) {
   const data = projectData[sectionId];
   if (!data) return '';
-
+  
   switch(sectionId) {
     case 'hero':
       return `
@@ -1157,33 +1157,25 @@ function removeFaqItem(idx) {
 
 function handleImageUpload(event, section, field) {
   const file = event.target.files[0];
-  if (!file) return;
-  try {
+  if (file) {
     const reader = new FileReader();
-    reader.onerror = () => showNotification('خطأ: فشل رفع الصورة');
     reader.onload = function(e) {
       projectData[section][field] = e.target.result;
       saveState();
       renderSections();
       updatePreview();
-      setTimeout(() => document.getElementById('content-' + section)?.classList.add('open'), 50);
-      showNotification('تم رفع الصورة بنجاح ✓');
-      event.target.value = '';
+      document.getElementById('content-' + section)?.classList.add('open');
+      showNotification('تم رفع الصورة بنجاح');
     };
     reader.readAsDataURL(file);
-  } catch (err) {
-    console.error('Upload error:', err);
-    showNotification('خطأ: فشل قراءة الملف');
   }
 }
 
 function handleVideoUpload(event, section, field) {
   const file = event.target.files[0];
-  if (!file) return;
-  showNotification('جاري رفع الفيديو...');
-  try {
+  if (file) {
+    showNotification('جاري رفع الفيديو...');
     const reader = new FileReader();
-    reader.onerror = () => showNotification('خطأ: فشل رفع الفيديو');
     reader.onload = function(e) {
       if (section && field) {
         projectData[section][field] = e.target.result;
@@ -1193,41 +1185,31 @@ function handleVideoUpload(event, section, field) {
       saveState();
       renderSections();
       updatePreview();
-      if (section) setTimeout(() => document.getElementById('content-' + section)?.classList.add('open'), 50);
-      showNotification('تم رفع الفيديو بنجاح ✓');
-      event.target.value = '';
+      if (section) document.getElementById('content-' + section)?.classList.add('open');
+      showNotification('تم رفع الفيديو بنجاح');
     };
     reader.readAsDataURL(file);
-  } catch (err) {
-    console.error('Video error:', err);
-    showNotification('خطأ: فشل قراءة الملف');
   }
 }
 
 function handleGalleryUpload(event) {
   const files = event.target.files;
-  if (!files || files.length === 0) return;
+  if (files.length === 0) return;
   let loaded = 0;
-  const errors = [];
   for (let file of files) {
-    try {
-      const reader = new FileReader();
-      reader.onerror = () => errors.push(file.name);
-      reader.onload = function(e) {
-        projectData.gallery.images.push(e.target.result);
-        loaded++;
-        if (loaded === files.length) {
-          saveState();
-          renderSections();
-          updatePreview();
-          setTimeout(() => document.getElementById('content-gallery')?.classList.add('open'), 50);
-          const msg = errors.length > 0 ? `تم رفع ${loaded} صورة (${errors.length} فشلت)` : `تم رفع ${files.length} صورة ✓`;
-          showNotification(msg);
-          event.target.value = '';
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (err) { loaded++; errors.push(file.name); }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      projectData.gallery.images.push(e.target.result);
+      loaded++;
+      if (loaded === files.length) {
+        saveState();
+        renderSections();
+        updatePreview();
+        document.getElementById('content-gallery')?.classList.add('open');
+        showNotification(`تم رفع ${files.length} صورة بنجاح`);
+      }
+    };
+    reader.readAsDataURL(file);
   }
 }
 
@@ -1277,7 +1259,7 @@ function updateDesignInputs() {
 function generateHTML() {
   const d = projectData.design;
   const sorted = [...projectData.sections].filter(s => s.enabled).sort((a, b) => a.order - b.order);
-
+  
   let sectionsHTML = '';
   sorted.forEach(section => {
     sectionsHTML += generateSectionHTML(section.id);
@@ -1938,7 +1920,7 @@ function loadTemplate(template) {
       }
     }
   };
-
+  
   if (templates[template]) {
     projectData.hero = { ...projectData.hero, ...templates[template].hero };
     projectData.design = { ...projectData.design, ...templates[template].design };
